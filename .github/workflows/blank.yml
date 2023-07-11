@@ -4,8 +4,6 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    - cron: "0 14 * * 0-6"
   workflow_dispatch:
 
 jobs:
@@ -15,16 +13,15 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: build
-      if: always()
       run: |
         sudo apt update
         sudo apt install libfuse2
         wget https://raw.githubusercontent.com/ivan-hc/Chromium-Web-Browser-appimage/main/chromium
         chmod a+x ./chromium
-        ./chromium
+        sudo ./chromium
         mkdir dist
-        mv *AppImage dist/
-
+        VERSION=$(curl -s https://launchpad.net/~savoury1/+archive/ubuntu/chromium | grep "latest stable release" | head -1 | grep -Eo "[0-9]+([.][0-9]+)?+[+-]?[0-9]?")
+        mv /opt/chromium/chromium dist/Chromium-Web-Browser-$VERSION-x86_64.AppImage
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -33,7 +30,6 @@ jobs:
         
   release:
       needs: [build]
-      permissions: write-all
       runs-on: ubuntu-latest
 
       steps:
